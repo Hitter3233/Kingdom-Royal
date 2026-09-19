@@ -3,163 +3,31 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1.0">
-<title>Kingdom Clash — Christian Lane Battle</title>
-<style>
-*{box-sizing:border-box}body{margin:0;background:#101522;color:#fff;font-family:system-ui,-apple-system,Segoe UI,sans-serif;overflow:hidden}
-#wrap{height:100vh;display:flex;align-items:center;justify-content:center}
-#game{width:min(100vw,1000px);height:min(100vh,760px);position:relative;background:#182b20;overflow:hidden;box-shadow:0 0 35px #000}
-canvas{width:100%;height:100%;display:block}
-#ui{position:absolute;inset:0;pointer-events:none}
-#topbar{position:absolute;top:10px;left:50%;transform:translateX(-50%);background:#0009;border:1px solid #ffffff33;border-radius:12px;padding:7px 14px;text-align:center;font-weight:700}
-#hint{font-size:12px;color:#ddd;font-weight:500}
-#cards{position:absolute;bottom:10px;left:50%;transform:translateX(-50%);display:flex;gap:7px;pointer-events:auto}
-.card{width:112px;height:82px;border:2px solid #d8b75a;border-radius:10px;background:linear-gradient(#26374b,#17202e);color:white;cursor:pointer;padding:5px;position:relative;box-shadow:0 4px 10px #0008}
-.card:hover{filter:brightness(1.2)}.card.selected{outline:3px solid #fff}
-.card.disabled{opacity:.45}.cost{position:absolute;top:3px;right:5px;background:#7048b7;border-radius:50%;width:22px;height:22px;line-height:22px;font-weight:800}
-.card b{display:block;margin-top:3px}.card small{display:block;color:#ddd;font-size:10px;line-height:12px}
-#manaBox{position:absolute;bottom:102px;left:50%;transform:translateX(-50%);width:370px;background:#0009;border-radius:12px;padding:6px}
-#manaBar{height:18px;border-radius:9px;background:#26163e;overflow:hidden;border:1px solid #ffffff44}
-#manaFill{height:100%;width:50%;background:linear-gradient(90deg,#9c62ff,#d7a4ff);transition:width .15s}
-#manaText{position:absolute;left:0;right:0;text-align:center;top:6px;font-size:12px;font-weight:800}
-#message{position:absolute;top:45%;left:50%;transform:translate(-50%,-50%);font-size:38px;font-weight:900;text-shadow:0 4px 8px #000;text-align:center;display:none}
-#restart{pointer-events:auto;display:none;margin-top:12px;border:0;border-radius:10px;padding:10px 18px;background:#d8b75a;font-weight:800;cursor:pointer}
-@media(max-width:700px){.card{width:82px;height:74px}.card small{display:none}#manaBox{width:280px}.card b{font-size:12px}}
-</style>
+<title>Kingdom Clash</title>
+<link rel="stylesheet" href="css/style.css">
 </head>
 <body>
-<div id="wrap"><div id="game">
-<canvas id="c" width="1000" height="760"></canvas>
-<div id="ui">
-  <div id="topbar">KINGDOM CLASH <span id="timer">3:00</span><div id="hint">Choose a card, then click a lane on your side.</div></div>
-  <div id="manaBox"><div id="manaBar"><div id="manaFill"></div></div><div id="manaText">5 / 10 MANA</div></div>
-  <div id="cards"></div>
-  <div id="message"><div id="result"></div><button id="restart">Play Again</button></div>
-</div>
-</div></div>
+<div id="app">
+  <div id="deckScreen">
+    <h1>✝ Kingdom Deck Builder</h1>
+    <p>Select exactly <b>8 cards</b>. You will have 4 in your hand at a time.</p>
+    <div id="deckCount">0 / 8 selected</div>
+    <div id="deckGrid"></div>
+    <button id="startGame">Start Battle</button>
+  </div>
 
-<script>
-const canvas=document.getElementById("c"),ctx=canvas.getContext("2d");
-const W=1000,H=760, riverY=380, laneX=[330,670];
-const cards=[
- {id:"shepherd",name:"Shepherd",cost:3,hp:520,dmg:55,range:34,speed:52,rate:.85,color:"#e8d6a2",desc:"Steady close fighter"},
- {id:"disciple",name:"Disciple",cost:4,hp:390,dmg:85,range:150,speed:35,rate:1.15,color:"#79b7ff",desc:"Ranged supporter"},
- {id:"guardian",name:"Temple Guard",cost:5,hp:900,dmg:75,range:38,speed:25,rate:1.05,color:"#c7c7d4",desc:"Strong defender"},
- {id:"light",name:"Light",cost:2,hp:170,dmg:125,range:120,speed:70,rate:1.3,color:"#ffe27a",desc:"Fast glass cannon"}
-];
-let units=[],particles=[],mana=5,time=180,selected=null,gameOver=false,last=performance.now(),aiThink=0;
-const cardsEl=document.getElementById("cards");
-cards.forEach((c,i)=>{
- const d=document.createElement("button");d.className="card";d.innerHTML=`<span class="cost">${c.cost}</span><b>${c.name}</b><small>${c.desc}</small>`;
- d.onclick=()=>{if(!gameOver&&mana>=c.cost){selected=i;document.querySelectorAll(".card").forEach(x=>x.classList.remove("selected"));d.classList.add("selected")}};
- cardsEl.appendChild(d);
-});
-const towers=[
- {team:"player",x:330,y:665,hp:2600,max:2600,kind:"king",range:250,dmg:70,rate:.75,last:0},
- {team:"player",x:670,y:665,hp:1700,max:1700,kind:"tower",range:210,dmg:48,rate:.8,last:0},
- {team:"player",x:330,y:95,hp:1700,max:1700,kind:"tower",range:210,dmg:48,rate:.8,last:0},
- {team:"player",x:670,y:95,hp:1700,max:1700,kind:"tower",range:210,dmg:48,rate:.8,last:0},
- {team:"ai",x:500,y:45,hp:2600,max:2600,kind:"king",range:250,dmg:70,rate:.75,last:0}
-];
-function spawn(card,team,lane){
- const side=team==="player"?1:-1;
- units.push({team,x:laneX[lane]+(Math.random()*35-17),y:team==="player"?600:160,hp:card.hp,max:card.hp,dmg:card.dmg,range:card.range,speed:card.speed,rate:card.rate,last:0,color:card.color,name:card.name,lane});
-}
-function draw(){
- ctx.clearRect(0,0,W,H);
- // grass
- ctx.fillStyle="#254b2c";ctx.fillRect(0,0,W,H);
- // subtle grid
- ctx.strokeStyle="#ffffff08";for(let x=0;x<W;x+=50){ctx.beginPath();ctx.moveTo(x,0);ctx.lineTo(x,H);ctx.stroke()}
- for(let y=0;y<H;y+=50){ctx.beginPath();ctx.moveTo(0,y);ctx.lineTo(W,y);ctx.stroke()}
- // river
- ctx.fillStyle="#326b91";ctx.fillRect(0,riverY-34,W,68);
- ctx.fillStyle="#ffffff12";for(let x=0;x<W;x+=70){ctx.fillRect(x,riverY-10,40,3)}
- // bridges
- laneX.forEach(x=>{ctx.fillStyle="#8a633f";ctx.fillRect(x-48,riverY-40,96,80);ctx.fillStyle="#b38a5c";for(let y=riverY-35;y<riverY+40;y+=15)ctx.fillRect(x-45,y,90,5)});
- // towers
- towers.forEach(t=>drawTower(t));
- // units
- units.forEach(u=>drawUnit(u));
- particles.forEach(p=>{ctx.globalAlpha=p.life/.6;ctx.fillStyle=p.color;ctx.beginPath();ctx.arc(p.x,p.y,p.r,0,Math.PI*2);ctx.fill();ctx.globalAlpha=1});
-}
-function hpbar(x,y,w,h,hp,max){ctx.fillStyle="#000b";ctx.fillRect(x-w/2,y,w,h);ctx.fillStyle=hp/max>.5?"#55d66f":hp/max>.25?"#f0c64b":"#e45d5d";ctx.fillRect(x-w/2,y,w*Math.max(0,hp/max),h)}
-function drawTower(t){
- if(t.hp<=0)return;
- ctx.save();ctx.translate(t.x,t.y);
- ctx.fillStyle=t.kind==="king"?"#d7b95e":"#aab5c5";ctx.strokeStyle="#3b2b18";ctx.lineWidth=5;
- ctx.fillRect(-34,-34,68,68);ctx.strokeRect(-34,-34,68,68);
- ctx.fillStyle=t.team==="player"?"#5b87c9":"#a35b5b";ctx.fillRect(-22,-22,44,22);
- ctx.fillStyle="#fff";ctx.font="bold 25px serif";ctx.textAlign="center";ctx.fillText(t.kind==="king"?"✝":"☩",0,14);
- ctx.restore();hpbar(t.x,t.y-48,90,7,t.hp,t.max);
-}
-function drawUnit(u){
- ctx.save();ctx.translate(u.x,u.y);
- ctx.fillStyle=u.color;ctx.strokeStyle=u.team==="player"?"#1e5bba":"#9b2c2c";ctx.lineWidth=3;
- ctx.beginPath();ctx.arc(0,0,18,0,Math.PI*2);ctx.fill();ctx.stroke();
- ctx.fillStyle="#fff";ctx.font="bold 18px serif";ctx.textAlign="center";ctx.fillText(u.name==="Light"?"✦":u.name==="Disciple"?"✧":"✝",0,6);
- ctx.restore();hpbar(u.x,u.y-27,42,5,u.hp,u.max);
-}
-function dist(a,b){return Math.hypot(a.x-b.x,a.y-b.y)}
-function targets(u){
- return units.filter(v=>v.team!==u.team&&v.lane===u.lane&&v.hp>0)
-   .sort((a,b)=>dist(u,a)-dist(u,b));
-}
-function enemyTowers(team){
- return towers.filter(t=>t.team!==team&&t.hp>0).sort((a,b)=>dist({x:a.x,y:a.y},uDummy)-dist({x:b.x,y:b.y},uDummy));
-}
-let uDummy={x:0,y:0};
-function update(dt){
- if(gameOver)return;
- time-=dt;if(time<=0){time=0;finish("TIME!");}
- mana=Math.min(10,mana+dt*.75);
- aiThink-=dt;if(aiThink<=0){aiThink=2.1+Math.random()*1.4;aiSpawn()}
- // combat/movement
- units.forEach(u=>{
-   if(u.hp<=0)return;
-   const ts=targets(u);let target=ts[0];
-   if(!target){
-     const candidates=towers.filter(t=>t.team!==u.team&&t.hp>0);
-     target=candidates.sort((a,b)=>Math.abs(a.y-u.y)+Math.abs(a.x-u.x)-Math.abs(b.y-u.y)-Math.abs(b.x-u.x))[0];
-   }
-   if(!target)return;
-   const d=dist(u,target);
-   if(d<=u.range){
-     u.last-=dt;if(u.last<=0){u.last=u.rate;target.hp-=u.dmg;burst(target.x,target.y,u.team==="player"?"#ffe27a":"#ff7777");}
-   }else{
-     const dy=target.y-u.y,dx=target.x-u.x,len=Math.hypot(dx,dy)||1;
-     u.x+=dx/len*u.speed*dt;u.y+=dy/len*u.speed*dt;
-     u.y=Math.max(55,Math.min(650,u.y));
-   }
- });
- towers.forEach(t=>{
-   if(t.hp<=0)return;
-   t.last-=dt; if(t.last>0)return;
-   const candidates=units.filter(u=>u.team!==t.team&&u.hp>0&&dist(t,u)<=t.range);
-   if(candidates.length){const target=candidates[0];t.last=t.rate;target.hp-=t.dmg;burst(target.x,target.y,"#ffffff")}
- });
- units=units.filter(u=>u.hp>0);
- particles.forEach(p=>{p.life-=dt;p.x+=p.vx*dt;p.y+=p.vy*dt});particles=particles.filter(p=>p.life>0);
- const aiKing=towers.find(t=>t.team==="ai"&&t.kind==="king");
- const playerKing=towers.find(t=>t.team==="player"&&t.kind==="king");
- if(aiKing.hp<=0)finish("VICTORY!");else if(playerKing.hp<=0)finish("DEFEAT");
-}
-function aiSpawn(){
- const affordable=cards.filter(c=>true);
- const c=affordable[Math.floor(Math.random()*affordable.length)];
- const lane=Math.random()<.5?0:1;spawn(c,"ai",lane);
-}
-function burst(x,y,color){for(let i=0;i<5;i++)particles.push({x,y,r:2+Math.random()*3,vx:(Math.random()-.5)*40,vy:(Math.random()-.5)*40,life:.6,color})}
-canvas.addEventListener("click",e=>{
- if(selected===null||gameOver)return;
- const r=canvas.getBoundingClientRect(),x=(e.clientX-r.left)*W/r.width,y=(e.clientY-r.top)*H/r.height;
- if(y<riverY+20||y>690)return;
- const lane=x<500?0:1,c=cards[selected];if(mana<c.cost)return;
- mana-=c.cost;spawn(c,"player",lane);selected=null;document.querySelectorAll(".card").forEach(x=>x.classList.remove("selected"));
-});
-document.getElementById("restart").onclick=()=>location.reload();
-function finish(text){gameOver=true;document.getElementById("result").textContent=text;document.getElementById("message").style.display="block";document.getElementById("restart").style.display="inline-block"}
-function ui(){document.getElementById("manaFill").style.width=(mana*10)+"%";document.getElementById("manaText").textContent=`${mana.toFixed(1)} / 10 MANA`;document.getElementById("timer").textContent=`${Math.floor(time/60)}:${String(Math.ceil(time%60)).padStart(2,"0")}`;document.querySelectorAll(".card").forEach((el,i)=>el.classList.toggle("disabled",mana<cards[i].cost))}
-function loop(now){const dt=Math.min(.05,(now-last)/1000);last=now;update(dt);draw();ui();requestAnimationFrame(loop)}requestAnimationFrame(loop);
-</script>
+  <div id="game">
+    <canvas id="canvas" width="1000" height="760"></canvas>
+    <div id="topbar">KINGDOM CLASH <span id="timer">3:00</span><div id="hint">Choose a card, then click a lane on your side.</div></div>
+    <button id="openDeck">Deck</button>
+    <div id="manaBox"><div id="manaBar"><div id="manaFill"></div></div><div id="manaText">5 / 10 MANA</div></div>
+    <div id="cards"></div>
+    <div id="message"><div id="result"></div><button id="restart">Play Again</button></div>
+  </div>
+</div>
+<script src="js/cards.js"></script>
+<script src="js/deck.js"></script>
+<script src="js/game.js"></script>
+<script src="js/ui.js"></script>
 </body>
 </html>
