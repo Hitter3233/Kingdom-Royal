@@ -151,10 +151,10 @@ function update(dt){
  if(gameOver)return;
  time=Math.max(0,time-dt);if(time<=0)return finish("TIME!");
  mana=Math.min(10,mana+dt*.75);
- aiBlessing=Math.min(10,aiBlessing+dt*.75);
+ aiBlessing=Math.min(10,aiBlessing+dt*.70);
  aiThink-=dt;
  if(aiThink<=0){
-   aiThink=1.5+Math.random()*1.7;
+   aiThink=2.0+Math.random()*2.0;
    const affordable=CARDS.filter(c=>c.cost<=aiBlessing);
    if(affordable.length){
      const c=affordable[Math.floor(Math.random()*affordable.length)];
