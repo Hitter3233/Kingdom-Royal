@@ -1,0 +1,55 @@
+KINGDOM CLASH — ONLINE-READY GAME FILES
+===========================================
+
+This ZIP is a replacement for the current Kingdom Clash game files.
+
+It is based on the player-advantage version and includes:
+- 20-card deck builder
+- 8-card deck / 4-card hand
+- Blessing system
+- player advantage Blessing regeneration
+- detailed battlefield and sprites
+- PWA/app icons
+- multiplayer connection panel
+- WebSocket client already configured for:
+
+  wss://kingdom-clash-server.onrender.com
+
+HOW TO USE
+----------
+1. Download this ZIP.
+2. Extract it.
+3. Replace the files in your GitHub Pages game repository with these files.
+4. Commit/push the changes.
+5. Open the GitHub Pages game.
+
+ONLINE TEST
+-----------
+On the deck screen:
+1. Tap "Connect Online".
+2. Tap "Create Room".
+3. Give the 5-character room code to the other player.
+4. The other player opens the same game.
+5. They tap "Connect Online".
+6. They enter the room code.
+7. They tap "Join".
+
+IMPORTANT
+---------
+This version connects to the multiplayer server and creates/joins rooms.
+It is the multiplayer FOUNDATION, not the final synchronized 1v1 battle.
+
+The next multiplayer stage is to make the server authoritative for:
+- player card plays
+- Blessing
+- unit spawning
+- unit movement
+- damage
+- tower health
+- match timer
+- victory/defeat
+
+Do NOT replace the Render server files with this ZIP. This ZIP is the
+GAME repository only. Your Render server remains at:
+
+https://kingdom-clash-server.onrender.com/

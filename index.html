@@ -19,6 +19,30 @@
     <p>Select exactly <b>8 cards</b>. You will have 4 in your hand at a time.</p>
     <div id="deckCount">0 / 8 selected</div>
     <div id="deckGrid"></div>
+
+    <div id="onlinePanel">
+      <h2>⚔ Online Battle</h2>
+      <p class="online-help">Connect to the Kingdom Clash server, then create a room or join a friend's room.</p>
+
+      <button id="connectOnline" class="onlineButton">Connect Online</button>
+
+      <div class="onlineRow">
+        <button id="createRoom" class="onlineButton">Create Room</button>
+        <span class="orText">OR</span>
+        <input id="roomInput" class="roomInput" maxlength="5" autocomplete="off" placeholder="CODE">
+        <button id="joinRoom" class="onlineButton">Join</button>
+      </div>
+
+      <div class="onlineStatusLine">
+        <span>Status:</span>
+        <strong id="onlineStatus">Offline</strong>
+      </div>
+
+      <div class="roomLine">
+        Room Code:
+        <strong id="roomCode">-----</strong>
+      </div>
+    </div>
     <button id="startGame">Start Battle</button>
   </div>
 
@@ -28,12 +52,49 @@
     <button id="openDeck">Deck</button>
     <div id="manaBox"><div id="manaBar"><div id="manaFill"></div></div><div id="manaText">5 / 10 BLESSING</div></div>
     <div id="cards"></div>
-    <div id="message"><div id="result"></div><button id="restart">Play Again</button></div>
+    <div id="message"><div class="balance-note">Player Blessing regenerates faster than the bot.</div>
+<div id="result"></div><button id="restart">Play Again</button></div>
   </div>
 </div>
 <script src="js/cards.js"></script>
 <script src="js/deck.js"></script>
 <script src="js/game.js"></script>
 <script src="js/ui.js"></script>
+<script src="js/multiplayer.js"></script>
+
+<script>
+(function () {
+  const connect = document.getElementById("connectOnline");
+  const create = document.getElementById("createRoom");
+  const join = document.getElementById("joinRoom");
+  const input = document.getElementById("roomInput");
+
+  connect.addEventListener("click", async () => {
+    try {
+      await Multiplayer.connect();
+    } catch (err) {
+      console.error(err);
+    }
+  });
+
+  create.addEventListener("click", () => Multiplayer.createRoom());
+
+  join.addEventListener("click", () => {
+    Multiplayer.joinRoom(input.value);
+  });
+
+  input.addEventListener("keydown", event => {
+    if (event.key === "Enter") {
+      Multiplayer.joinRoom(input.value);
+    }
+  });
+
+  window.addEventListener("multiplayer-opponent-joined", () => {
+    const status = document.getElementById("onlineStatus");
+    if (status) status.textContent = "Opponent connected!";
+  });
+})();
+</script>
+
 </body>
 </html>
