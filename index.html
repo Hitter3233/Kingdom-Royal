@@ -18,33 +18,7 @@
     <h1>✝ Kingdom Deck Builder</h1>
     <p>Select exactly <b>8 cards</b>. You will have 4 in your hand at a time.</p>
     <div id="deckCount">0 / 8 selected</div>
-    <div id="deckGrid"></div>
-
-    <div id="onlinePanel">
-      <h2>⚔ Online Battle</h2>
-      <p class="online-help">Connect to the Kingdom Clash server, then create a room or join a friend's room.</p>
-
-      <button id="connectOnline" class="onlineButton">Connect Online</button>
-
-      <div class="onlineRow">
-        <button id="createRoom" class="onlineButton">Create Room</button>
-        <span class="orText">OR</span>
-        <input id="roomInput" class="roomInput" maxlength="5" autocomplete="off" placeholder="CODE">
-        <button id="joinRoom" class="onlineButton">Join</button>
-      </div>
-
-      <div class="onlineStatusLine">
-        <span>Status:</span>
-        <strong id="onlineStatus">Offline</strong>
-      </div>
-
-      <div class="roomLine">
-        Room Code:
-        <strong id="roomCode">-----</strong>
-      </div>
-    </div>
-    <div id="onlinePvpPanel"><h2>⚔ Online 1v1 Battle</h2><p class="online-help">Create a room and share the code with a friend.</p><div class="online-actions"><button id="pvpConnect">Connect</button><button id="pvpCreate">Create Room</button></div><div class="online-join"><input id="pvpRoomInput" maxlength="5" placeholder="ROOM CODE" autocomplete="off"><button id="pvpJoin">Join Room</button></div><div class="online-status-line">Status: <strong id="onlineStatus">Offline</strong></div><div class="room-line">Room Code: <strong id="roomCode">-----</strong></div><button id="pvpStart" disabled>⚔ Start Match</button></div>
-<button id="startGame">Start Battle</button>
+    <div id="deckGrid"></div><button id="startGame">Start Battle</button>
   </div>
 
   <div id="game">
@@ -61,7 +35,6 @@
 <script src="js/deck.js"></script>
 <script src="js/game.js"></script>
 <script src="js/ui.js"></script>
-<script src="js/multiplayer.js"></script>
 
 <script>
 (function () {

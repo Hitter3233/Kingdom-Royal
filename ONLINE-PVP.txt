@@ -1,8 +1,20 @@
-Kingdom Clash Online 1v1 upgrade.
+KINGDOM CLASH ONLINE 1v1 — CLEAN VERSION
 
-Game repo: replace your normal GitHub Pages files with this ZIP.
-Server: replace the files in the separate Render server repo with the server ZIP.
+This version removes the duplicate/older Online Battle panel.
 
-Flow: Connect -> Create Room -> share code -> friend joins -> host starts match.
+Use this ZIP for the NORMAL Kingdom Clash GitHub Pages repository.
 
-This upgrade adds the real room/match protocol, but the next stage is wiring every existing unit/tower/Blessing simulation into server-authoritative gameplay.
+It keeps only the new:
+⚔ Online 1v1 Battle
+
+panel with:
+- Connect
+- Create Room
+- Room code
+- Join Room
+- Start Match
+
+The game connects to:
+wss://kingdom-clash-server.onrender.com
+
+The separate server repository remains unchanged by this ZIP.
