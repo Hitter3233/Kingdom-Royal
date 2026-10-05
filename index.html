@@ -43,7 +43,8 @@
         <strong id="roomCode">-----</strong>
       </div>
     </div>
-    <button id="startGame">Start Battle</button>
+    <div id="onlinePvpPanel"><h2>⚔ Online 1v1 Battle</h2><p class="online-help">Create a room and share the code with a friend.</p><div class="online-actions"><button id="pvpConnect">Connect</button><button id="pvpCreate">Create Room</button></div><div class="online-join"><input id="pvpRoomInput" maxlength="5" placeholder="ROOM CODE" autocomplete="off"><button id="pvpJoin">Join Room</button></div><div class="online-status-line">Status: <strong id="onlineStatus">Offline</strong></div><div class="room-line">Room Code: <strong id="roomCode">-----</strong></div><button id="pvpStart" disabled>⚔ Start Match</button></div>
+<button id="startGame">Start Battle</button>
   </div>
 
   <div id="game">
@@ -96,5 +97,7 @@
 })();
 </script>
 
+<script src="js/online_pvp.js"></script>
+<script>(function(){const $=id=>document.getElementById(id);if(!$("pvpConnect"))return;$("pvpConnect").onclick=async()=>{try{await KingdomClashOnline.connect()}catch(e){console.error(e)}};$("pvpCreate").onclick=()=>KingdomClashOnline.createRoom();$("pvpJoin").onclick=()=>KingdomClashOnline.joinRoom($("pvpRoomInput").value);$("pvpRoomInput").onkeydown=e=>{if(e.key==="Enter")KingdomClashOnline.joinRoom($("pvpRoomInput").value)};window.addEventListener("kingdom-opponent-joined",()=>{$("pvpStart").disabled=false});$("pvpStart").onclick=()=>KingdomClashOnline.startMatch();window.addEventListener("kingdom-match-start",()=>{$("pvpStart").disabled=true})})();</script>
 </body>
 </html>
